@@ -1,0 +1,9 @@
+/* Explicit sources only: automatic detection scans the whole bind-mounted project and is very slow. */
+@import 'tailwindcss' source(none);
+
+@source '../views';
+@source '../js';
+
+@theme {
+    --font-sans: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+}

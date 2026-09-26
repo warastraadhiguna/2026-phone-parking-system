@@ -1,0 +1,28 @@
+# Secrets and local environment files (never commit)
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+google-services.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Office lock files
+~$*
+
+# Android (added when the android/ project is created)
+android/**/build/
+android/.gradle/
+android/local.properties
