@@ -127,6 +127,12 @@ The command sends a correctly signed notification through the real webhook proce
 `payments:check-pending` runs every minute. It asks the provider about open payments (expired
 QR, unknown charge outcome, or no check for 5 minutes).
 
+Verified against the real Midtrans sandbox on 2026-10-02: charge (with `qr_string` and
+`expiry_time`), status, cancel, and a simulator payment that the status check turned into PAID.
+The QRIS acquirer must be one that is active on the merchant account (`MIDTRANS_QRIS_ACQUIRER`;
+an inactive one answers `404 Merchant pop id is not found`). Real webhook delivery still needs a
+public URL.
+
 For the Midtrans sandbox, set `PAYMENT_GATEWAY=midtrans`, `MIDTRANS_ENVIRONMENT=sandbox` and
 `MIDTRANS_SERVER_KEY=<sandbox key>` (never committed). The notification URL must be reachable
 from the internet, for example through a tunnel. Without it, polling and `payments:check-pending`

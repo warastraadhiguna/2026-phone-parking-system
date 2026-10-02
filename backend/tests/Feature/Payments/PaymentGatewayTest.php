@@ -91,7 +91,9 @@ describe('Midtrans adapter', function () {
             ->and($result->providerReference)->toBe('mid-tx-1')
             ->and($result->qrString)->toBe('00020101021226...')
             ->and($result->qrImageUrl)->toBe(SANDBOX.'/v2/qris/mid-tx-1/qr-code')
-            ->and($result->expiresAt?->utc()->toIso8601String())->toBe('2026-09-25T01:15:00+00:00');
+            ->and($result->expiresAt?->utc()->toIso8601String())->toBe('2026-09-25T01:15:00+00:00')
+            // Must already be UTC: Eloquent would store a WIB instance 7 hours off.
+            ->and($result->expiresAt?->getTimezone()->getName())->toBe('UTC');
 
         Http::assertSent(function (Request $request) {
             return $request->method() === 'POST'

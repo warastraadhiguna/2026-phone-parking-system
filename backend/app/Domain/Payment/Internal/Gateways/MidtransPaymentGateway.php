@@ -237,7 +237,8 @@ final class MidtransPaymentGateway implements PaymentGatewayInterface
         }
 
         try {
-            return CarbonImmutable::parse($value, self::PROVIDER_TIMEZONE);
+            // To UTC: Eloquent stores datetimes without an offset, so a WIB instance would be saved 7 hours off.
+            return CarbonImmutable::parse($value, self::PROVIDER_TIMEZONE)->utc();
         } catch (\Throwable) {
             return null;
         }
