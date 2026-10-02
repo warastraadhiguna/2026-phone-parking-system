@@ -1,0 +1,36 @@
+# Pati Parking nginx site, filled in by deploy/install.sh (domain, backend dir, php-fpm socket).
+# HTTP only here; `certbot --nginx` adds the 443 block and the redirect.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name __DOMAIN__;
+
+    root __BACKEND_DIR__/public;
+    index index.php;
+
+    # Settlement proof photos up to 5 MB, attendant photos up to 2 MB.
+    client_max_body_size 12m;
+    server_tokens off;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    # Only index.php is ever executed (Laravel's single entry point).
+    location = /index.php {
+        include fastcgi_params;
+        fastcgi_pass unix:__PHP_FPM_SOCK__;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        # Scoped to THIS site only: the php-fpm pool and php.ini are shared with other sites.
+        fastcgi_param PHP_VALUE "upload_max_filesize=10M \n post_max_size=12M \n expose_php=Off";
+        fastcgi_hide_header X-Powered-By;
+        fastcgi_read_timeout 60s;
+    }
+
+    location ~ \.php$ { return 404; }
+    location ~ /\.(?!well-known) { deny all; }
+}

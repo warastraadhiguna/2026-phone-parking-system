@@ -1,0 +1,18 @@
+[Unit]
+Description=Pati Parking queue worker
+After=network.target redis-server.service postgresql.service
+Wants=redis-server.service
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=__BACKEND_DIR__
+ExecStart=__PHP__ artisan queue:work redis --sleep=3 --tries=3 --backoff=10 --max-time=3600
+Restart=always
+RestartSec=5
+# Shared server: a runaway worker must never starve the other sites.
+MemoryMax=256M
+Nice=10
+
+[Install]
+WantedBy=multi-user.target
