@@ -95,11 +95,12 @@ echo "Memori  : $(free -m | awk '/^Mem:/ {print $7}') MB tersedia"
 
 # ---- ask everything now, so the long part runs unattended ------------------
 say "Data untuk Super Admin pertama"
-read -r -p "Email (untuk notifikasi sertifikat HTTPS): " ADMIN_EMAIL
+# Non-interactive when ADMIN_EMAIL / ADMIN_USERNAME / ADMIN_NAME are given as env vars.
+[ -n "${ADMIN_EMAIL:-}" ] || read -r -p "Email (untuk notifikasi sertifikat HTTPS): " ADMIN_EMAIL
 [[ "$ADMIN_EMAIL" =~ ^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$ ]] || die "Format email tidak valid."
-read -r -p "Username Super Admin (huruf kecil/angka/titik, mis. admin.pati): " ADMIN_USERNAME
+[ -n "${ADMIN_USERNAME:-}" ] || read -r -p "Username Super Admin (huruf kecil/angka/titik, mis. admin.pati): " ADMIN_USERNAME
 [[ "$ADMIN_USERNAME" =~ ^[a-z0-9][a-z0-9._-]{2,49}$ ]] || die "Username tidak valid."
-read -r -p "Nama lengkap Super Admin: " ADMIN_NAME
+[ -n "${ADMIN_NAME:-}" ] || read -r -p "Nama lengkap Super Admin: " ADMIN_NAME
 [ -n "$ADMIN_NAME" ] || die "Nama tidak boleh kosong."
 
 # ---- 1. database + roles + .env ----------------------------------------------
@@ -186,7 +187,7 @@ IDENTITY_REFRESH_REUSE_GRACE_SECONDS=60
 PAYMENT_GATEWAY=midtrans
 MIDTRANS_ENVIRONMENT=sandbox
 MIDTRANS_PRODUCTION_APPROVED=false
-MIDTRANS_SERVER_KEY=
+MIDTRANS_SERVER_KEY=${MIDTRANS_SERVER_KEY:-}
 MIDTRANS_QRIS_ACQUIRER="airpay shopee"
 
 REPORTING_MAP_TILE_URL=https://tile.openstreetmap.org/{z}/{x}/{y}.png
@@ -233,9 +234,15 @@ art identity:sync-roles
 say "5/9  Akun Super Admin pertama"
 staff="$(pgsu psql -d "$DB_NAME" -tAc "select count(*) from users where account_type='STAFF'")"
 if [ "$staff" = "0" ]; then
-  echo "Anda akan diminta mengetik password (tidak terlihat). Minimal 10 karakter, huruf dan angka."
+  PW_FLAG=()
+  if [ -n "${GENERATE_ADMIN_PASSWORD:-}" ]; then
+    PW_FLAG=(--generate-password)
+    echo "Password dibuat acak dan ditampilkan SEKALI di bawah. CATAT, lalu ganti setelah login pertama."
+  else
+    echo "Anda akan diminta mengetik password (tidak terlihat). Minimal 10 karakter, huruf dan angka."
+  fi
   for attempt in 1 2 3; do
-    if art identity:create-super-admin "$ADMIN_USERNAME" "$ADMIN_NAME" --email="$ADMIN_EMAIL"; then break; fi
+    if art identity:create-super-admin "$ADMIN_USERNAME" "$ADMIN_NAME" --email="$ADMIN_EMAIL" "${PW_FLAG[@]}"; then break; fi
     warn "Belum berhasil (percobaan $attempt/3), ulangi."
   done
   [ "$(pgsu psql -d "$DB_NAME" -tAc "select count(*) from users where account_type='STAFF'")" != "0" ] || die "Super Admin belum terbentuk."
