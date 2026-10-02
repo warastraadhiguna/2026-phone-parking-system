@@ -26,3 +26,9 @@ Thumbs.db
 android/**/build/
 android/.gradle/
 android/local.properties
+
+# Android release signing (local only)
+android/keystore.properties
+
+# Built APKs for hand-out (not committed)
+dist/

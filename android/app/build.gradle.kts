@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     // AGP 9+ compiles Kotlin itself; Compose, serialization and KSP stay separate plugins.
     alias(libs.plugins.android.application)
@@ -15,9 +17,23 @@ android {
         minSdk = 26
         targetSdk = 37
         versionCode = 1
-        versionName = "0.5.0-dev"
+        versionName = "1.0.0-uji"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    // Release signing for side-loaded test installs. The keystore and its passwords live only on
+    // the build machine (android/keystore.properties + *.jks, both git-ignored). Keep a backup:
+    // updates of an installed app must be signed with the same key.
+    val signingFile = rootProject.file("keystore.properties")
+    if (signingFile.exists()) {
+        val props = Properties().apply { signingFile.inputStream().use { load(it) } }
+        signingConfigs.create("release") {
+            storeFile = rootProject.file(props.getProperty("storeFile"))
+            storePassword = props.getProperty("storePassword")
+            keyAlias = props.getProperty("keyAlias")
+            keyPassword = props.getProperty("keyPassword")
+        }
     }
 
     buildTypes {
@@ -28,6 +44,7 @@ android {
         release {
             buildConfigField("String", "API_BASE_URL", "\"${project.property("patiApiBaseUrlRelease")}\"")
             isMinifyEnabled = false
+            signingConfigs.findByName("release")?.let { signingConfig = it }
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
