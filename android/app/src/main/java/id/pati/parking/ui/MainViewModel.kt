@@ -75,12 +75,12 @@ class MainViewModel(private val repo: ParkingRepository) : ViewModel() {
     }
 
     fun refresh() = run {
-        repo.refreshBootstrap()
+        val fresh = repo.refreshBootstrap()
         repo.refreshCashBalance()
         openShift.value?.let { repo.refreshOpenQris(it.shiftUuid) }
         loadSummary()
         loadLocal()
-        null
+        if (fresh == null) repo.bootstrapProblem?.let { ActionResult.Error(it) } else null
     }
 
     fun startShift() = run { repo.startShift() }

@@ -98,8 +98,22 @@ class ParkingRepository(
     }
 
     /** Downloads the offline cache (docs/api/shifts.md). Silent when offline. */
+    /** Why the last bootstrap download failed, in words for the attendant (null = it worked). */
+    @Volatile var bootstrapProblem: String? = null
+        private set
+
     suspend fun refreshBootstrap(): Bootstrap? {
         val outcome = api.bootstrap()
+        bootstrapProblem = when (outcome) {
+            is ApiOutcome.Success -> null
+            is ApiOutcome.Failure -> when (outcome.code) {
+                "DEVICE_NOT_ALLOWED" -> "HP ini belum disetujui admin. Minta admin menyetujuinya di Control Center (menu Perangkat), lalu tekan Muat ulang."
+                "ACCOUNT_DISABLED" -> "Akun juru parkir tidak aktif. Hubungi admin."
+                else -> outcome.message
+            }
+            is ApiOutcome.NetworkError -> "Tidak dapat terhubung ke server. Periksa koneksi internet."
+            ApiOutcome.AuthRequired -> "Sesi berakhir. Silakan keluar lalu login ulang."
+        }
         if (outcome is ApiOutcome.Success) {
             db.config().put(LocalConfigEntity(KEY_BOOTSTRAP, json.encodeToString(Bootstrap.serializer(), outcome.data), System.currentTimeMillis()))
             adoptServerShift(outcome.data)
@@ -127,7 +141,7 @@ class ParkingRepository(
 
         val online = isOnline()
         val bootstrap = (if (online) refreshBootstrap() else null) ?: cachedBootstrap()
-            ?: return ActionResult.Error("Belum ada data konfigurasi. Hubungkan ke internet.")
+            ?: return ActionResult.Error(bootstrapProblem ?: "Belum ada data konfigurasi. Hubungkan ke internet.")
 
         if (online) {
             if (bootstrap.device.status != "ACTIVE") return ActionResult.Error("Perangkat belum disetujui admin.")
