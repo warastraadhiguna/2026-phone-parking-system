@@ -111,7 +111,7 @@ class ParkingRepository(
                 "ACCOUNT_DISABLED" -> "Akun juru parkir tidak aktif. Hubungi admin."
                 else -> outcome.message
             }
-            is ApiOutcome.NetworkError -> "Tidak dapat terhubung ke server. Periksa koneksi internet."
+            is ApiOutcome.NetworkError -> NETWORK_PROBLEM
             ApiOutcome.AuthRequired -> "Sesi berakhir. Silakan keluar lalu login ulang."
         }
         if (outcome is ApiOutcome.Success) {
@@ -139,9 +139,13 @@ class ParkingRepository(
     suspend fun startShift(): ActionResult {
         if (db.shifts().open() != null) return ActionResult.Error("Masih ada shift yang berjalan.")
 
-        val online = isOnline()
-        val bootstrap = (if (online) refreshBootstrap() else null) ?: cachedBootstrap()
-            ?: return ActionResult.Error(bootstrapProblem ?: "Belum ada data konfigurasi. Hubungkan ke internet.")
+        // Always ask the server first; "offline" means the server could not be reached, not what the
+        // phone reports about its network (some phones never mark a working network as validated).
+        val fresh = refreshBootstrap()
+        val online = fresh != null
+        if (fresh == null && bootstrapProblem != NETWORK_PROBLEM) return ActionResult.Error(bootstrapProblem ?: "Server menolak permintaan.")
+        val bootstrap = fresh ?: cachedBootstrap()
+            ?: return ActionResult.Error("Belum ada data konfigurasi dan server tidak dapat dihubungi. Periksa koneksi internet.")
 
         if (online) {
             if (bootstrap.device.status != "ACTIVE") return ActionResult.Error("Perangkat belum disetujui admin.")
@@ -408,6 +412,7 @@ class ParkingRepository(
 
     private companion object {
         const val KEY_BOOTSTRAP = "bootstrap"
+        const val NETWORK_PROBLEM = "Tidak dapat terhubung ke server. Periksa koneksi internet."
         const val COUNTER_SYNC_SEQUENCE = "sync_sequence"
     }
 }

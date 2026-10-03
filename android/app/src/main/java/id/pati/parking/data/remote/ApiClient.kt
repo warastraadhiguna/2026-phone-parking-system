@@ -152,7 +152,12 @@ class ApiClient(
                     }
 
                     if (envelope.success && envelope.data != null) {
-                        ApiOutcome.Success(json.decodeFromJsonElement(serializer, envelope.data))
+                        try {
+                            ApiOutcome.Success(json.decodeFromJsonElement(serializer, envelope.data))
+                        } catch (e: Exception) {
+                            // App and server disagree on the response shape: report it instead of crashing.
+                            ApiOutcome.Failure("RESPONSE_UNREADABLE", "Respons server tidak sesuai versi aplikasi (): ${e.message?.take(200)}", response.code)
+                        }
                     } else {
                         val error = envelope.error
                         ApiOutcome.Failure(error?.code ?: "HTTP_${response.code}", error?.message ?: "Permintaan gagal.", response.code)
