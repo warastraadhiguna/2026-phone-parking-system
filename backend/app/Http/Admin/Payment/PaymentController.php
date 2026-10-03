@@ -76,6 +76,9 @@ final class PaymentController
                 'expired_at' => $payment->expired_at?->toIso8601String(),
                 'paid_at' => $payment->paid_at?->toIso8601String(),
                 'status_reason' => $payment->status_reason,
+                // Only while payment is still possible; needed to pay a sandbox QR in the provider simulator.
+                'qr_image_url' => $payment->status === PaymentStatus::PENDING ? $payment->qr_image_url : null,
+                'sandbox' => config('payment.gateway') === 'midtrans' && config('payment.midtrans.environment') === 'sandbox',
                 'charge_attempts' => $payment->charge_attempts,
                 'last_status_check_at' => $payment->last_status_check_at?->toIso8601String(),
                 'refunded' => $refunded,

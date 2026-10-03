@@ -12,6 +12,8 @@ interface Props {
         provider_reference: string | null;
         expired_at: string | null;
         status_reason: string | null;
+        qr_image_url: string | null;
+        sandbox: boolean;
         charge_attempts: number;
         last_status_check_at: string | null;
         refunded: number;
@@ -75,6 +77,22 @@ export default function PaymentsShow({ payment: p, events, adjustments, can }: P
                         {row('Dibuat / kedaluwarsa', `${formatDateTime(p.created_at)} / ${p.expired_at ? formatDateTime(p.expired_at) : '—'}`)}
                         {row('Lunas pada', p.paid_at ? formatDateTime(p.paid_at) : '—')}
                         {p.status_reason && row('Keterangan', p.status_reason)}
+                        {p.qr_image_url &&
+                            row(
+                                'URL gambar QR',
+                                <>
+                                    <input readOnly value={p.qr_image_url} onFocus={(e) => e.target.select()} className="w-full rounded border border-slate-300 px-2 py-1 font-mono text-xs" />
+                                    {p.sandbox && (
+                                        <span className="mt-1 block text-xs text-slate-500">
+                                            Mode uji (sandbox): salin URL ini ke{' '}
+                                            <a href="https://simulator.sandbox.midtrans.com/v2/qris/index" target="_blank" rel="noreferrer" className="text-sky-700 hover:underline">
+                                                simulator Midtrans
+                                            </a>{' '}
+                                            untuk mensimulasikan pembayaran.
+                                        </span>
+                                    )}
+                                </>,
+                            )}
                         {row('Cek status terakhir', p.last_status_check_at ? formatDateTime(p.last_status_check_at) : '—')}
                     </dl>
                 </Card>
