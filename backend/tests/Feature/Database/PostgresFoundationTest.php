@@ -56,3 +56,14 @@ describe('append-only tables', function () {
         expect(DB::table('append_only_probe')->value('amount'))->toEqual(1);
     });
 });
+
+it('always talks to PostgreSQL in UTC, whatever the server default time zone is', function () {
+    // The test database default is Asia/Jakarta on purpose (docker/postgres/init), like a typical
+    // Indonesian server. Without the connection setting, timestamps are stored 7 hours off.
+    expect(DB::scalar('SHOW timezone'))->toBe('UTC')
+        ->and(DB::scalar("SELECT current_setting('timezone')"))->toBe('UTC');
+
+    $written = now()->startOfSecond();
+    $read = DB::scalar('SELECT ?::timestamptz', [$written->format('Y-m-d H:i:s')]);
+    expect(Carbon\CarbonImmutable::parse($read)->equalTo($written))->toBeTrue();
+});

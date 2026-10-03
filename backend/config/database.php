@@ -95,6 +95,9 @@ return [
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
+            // The application writes timestamps as UTC without an offset. A server whose default time
+            // zone is not UTC (e.g. Asia/Jakarta) would otherwise store every timestamptz shifted.
+            'timezone' => 'UTC',
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
             // Fail fast (seconds) instead of hanging requests and readiness checks.
