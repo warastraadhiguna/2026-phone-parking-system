@@ -1,6 +1,7 @@
 <?php
 
 use App\Support\Database\AppendOnlyTable;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -65,5 +66,5 @@ it('always talks to PostgreSQL in UTC, whatever the server default time zone is'
 
     $written = now()->startOfSecond();
     $read = DB::scalar('SELECT ?::timestamptz', [$written->format('Y-m-d H:i:s')]);
-    expect(Carbon\CarbonImmutable::parse($read)->equalTo($written))->toBeTrue();
+    expect(CarbonImmutable::parse($read)->equalTo($written))->toBeTrue();
 });
