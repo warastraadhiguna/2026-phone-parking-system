@@ -156,7 +156,7 @@ class ApiClient(
                             ApiOutcome.Success(json.decodeFromJsonElement(serializer, envelope.data))
                         } catch (e: Exception) {
                             // App and server disagree on the response shape: report it instead of crashing.
-                            ApiOutcome.Failure("RESPONSE_UNREADABLE", "Respons server tidak sesuai versi aplikasi (): ${e.message?.take(200)}", response.code)
+                            ApiOutcome.Failure("RESPONSE_UNREADABLE", "Respons server tidak sesuai versi aplikasi ($path): ${e.message?.take(200)}", response.code)
                         }
                     } else {
                         val error = envelope.error
