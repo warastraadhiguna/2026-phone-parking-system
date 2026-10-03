@@ -7,6 +7,19 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
+import id.pati.parking.R
+import id.pati.parking.BuildConfig
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -58,7 +71,8 @@ class MainActivity : ComponentActivity() {
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {}
             .launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
 
-        setContent { MaterialTheme { App(viewModel) } }
+        // Blue of the parking sign logo.
+        setContent { MaterialTheme(colorScheme = lightColorScheme(primary = Color(0xFF14539A))) { App(viewModel) } }
     }
 }
 
@@ -84,21 +98,56 @@ private fun App(vm: MainViewModel) {
 }
 
 @Composable
-private fun LoginScreen(vm: MainViewModel, state: UiState) {
+private fun ColumnScope.LoginScreen(vm: MainViewModel, state: UiState) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var showPassword by remember { mutableStateOf(false) }
 
-    Text("Pati Parking", style = MaterialTheme.typography.headlineMedium)
-    Text("Login juru parkir", style = MaterialTheme.typography.bodyMedium)
-    Spacer(Modifier.height(16.dp))
-    OutlinedTextField(username, { username = it }, label = { Text("Username (kode jukir)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-    OutlinedTextField(
-        password, { password = it }, label = { Text("Kata sandi") }, singleLine = true,
-        visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth(),
-    )
-    Spacer(Modifier.height(16.dp))
-    Button(onClick = { vm.login(username, password) }, enabled = !state.busy && username.isNotBlank() && password.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
-        Text(if (state.busy) "Memproses…" else "Masuk")
+    Column(
+        Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Image(painterResource(R.drawable.logo_parkir), contentDescription = "Logo Parkir", modifier = Modifier.size(112.dp))
+        Spacer(Modifier.height(12.dp))
+        Text("Parkir Kabupaten Pati", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("Aplikasi juru parkir", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+        Spacer(Modifier.height(24.dp))
+        ElevatedCard(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(20.dp)) {
+                Text("Masuk", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    username, { username = it }, label = { Text("Username (kode jukir)") }, singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next), modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    password, { password = it }, label = { Text("Kata sandi") }, singleLine = true,
+                    visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                    trailingIcon = {
+                        IconButton(onClick = { showPassword = !showPassword }) {
+                            Icon(
+                                painterResource(if (showPassword) R.drawable.ic_visibility_off else R.drawable.ic_visibility),
+                                contentDescription = if (showPassword) "Sembunyikan kata sandi" else "Lihat kata sandi",
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(20.dp))
+                Button(
+                    onClick = { vm.login(username, password) },
+                    enabled = !state.busy && username.isNotBlank() && password.isNotBlank(),
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                ) {
+                    Text(if (state.busy) "Memproses…" else "Masuk")
+                }
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        Text("Versi ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
     }
 }
 

@@ -16,8 +16,8 @@ android {
         applicationId = "id.pati.parking"
         minSdk = 26
         targetSdk = 37
-        versionCode = 3
-        versionName = "1.0.2-uji"
+        versionCode = 4
+        versionName = "1.0.3-uji"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
